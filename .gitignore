@@ -1,0 +1,11 @@
+# Backups
+bkp_*/
+bkp_test/
+
+# Python
+__pycache__/
+*.pyc
+
+# System
+.DS_Store
+.vscode/

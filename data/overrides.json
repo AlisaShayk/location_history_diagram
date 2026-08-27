@@ -1,0 +1,20 @@
+{
+  "_description": "Example overrides — demonstrates both stay and travel corrections.",
+
+  "stays": [
+    {"_comment": "GPS missed this stay entirely"},
+    {"from": "2024-01-17", "to": "2024-01-18", "country_code": "FR"},
+    {"from": "2024-12-25", "to": "2024-12-29", "country_code": "AT"}
+  ],
+
+  "travel": [
+    {"_comment": "── Flight Berlin → Paris ──"},
+    {"depart": "2024-01-12T13:00", "arrive": "2024-01-12T15:30", "from": "DE", "to": "FR"},
+
+    {"_comment": "── Flight Paris → Barcelona ──"},
+    {"depart": "2024-01-19T10:00", "arrive": "2024-01-19T12:30", "from": "FR", "to": "ES"},
+
+    {"_comment": "── Overnight flight Barcelona → Paris ──"},
+    {"depart": "2024-01-22T23:00", "arrive": "2024-01-23T01:30", "from": "ES", "to": "FR"}
+  ]
+}

@@ -1,0 +1,51 @@
+[
+  {
+    "start": "2024-01-10T08:00:00+00:00",
+    "end": "2024-01-12T12:00:00+00:00",
+    "country_code": "DE",
+    "country": "Germany",
+    "duration_days": 2.17
+  },
+  {
+    "start": "2024-01-12T14:30:00+00:00",
+    "end": "2024-01-19T09:00:00+00:00",
+    "country_code": "FR",
+    "country": "France",
+    "duration_days": 6.77
+  },
+  {
+    "start": "2024-01-19T11:30:00+00:00",
+    "end": "2024-01-22T22:00:00+00:00",
+    "country_code": "ES",
+    "country": "Spain",
+    "duration_days": 3.44
+  },
+  {
+    "start": "2024-01-22T22:00:00+00:00",
+    "end": "2024-02-05T08:00:00+00:00",
+    "country_code": "--",
+    "country": "NO DATA",
+    "duration_days": 13.42
+  },
+  {
+    "start": "2024-02-05T08:00:00+00:00",
+    "end": "2024-12-25T00:00:00+00:00",
+    "country_code": "DE",
+    "country": "Germany",
+    "duration_days": 323.67
+  },
+  {
+    "start": "2024-12-25T00:00:00+00:00",
+    "end": "2024-12-29T23:59:59+00:00",
+    "country_code": "AT",
+    "country": "Austria",
+    "duration_days": 5.0
+  },
+  {
+    "start": "2024-12-29T23:59:59+00:00",
+    "end": "2025-01-02T19:00:00+00:00",
+    "country_code": "DE",
+    "country": "Germany",
+    "duration_days": 3.79
+  }
+]

@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Travel History</title>
+<style>
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif; background: #0f0f1a; color: #e0e0e0; padding: 30px; line-height: 1.5; max-width: 1400px; margin: 0 auto; }
+h1 { color: #fff; margin-bottom: 4px; }
+.subtitle { color: #888; margin-bottom: 24px; font-size: 0.9em; }
+h2 { color: #fff; margin: 32px 0 12px; font-size: 1.2em; }
+.year-row { display: flex; align-items: flex-start; gap: 30px; background: #1a1a2e; border-radius: 14px; padding: 20px; margin-bottom: 20px; }
+.year-circle { flex: 1; min-width: 0; }
+.year-circle svg { width: 100%; height: auto; }
+.year-trips { flex: 1; min-width: 0; overflow-x: auto; }
+table { border-collapse: collapse; width: 100%; }
+th, td { padding: 5px 10px; text-align: left; font-size: 0.82em; white-space: nowrap; }
+th { color: #888; font-weight: 500; border-bottom: 1px solid #333; }
+td { border-bottom: 1px solid #1f1f35; }
+.num { text-align: right; font-variant-numeric: tabular-nums; }
+.badge { display: inline-block; padding: 2px 8px; border-radius: 4px; color: #fff; font-size: 0.8em; font-weight: 500; white-space: nowrap; }
+.summary-table { max-width: 400px; }
+.note { color: #888; font-size: 0.8em; margin-top: 16px; }
+.tooltip { position: fixed; background: #222; color: #fff; padding: 8px 12px; border-radius: 6px; font-size: 12px; pointer-events: none; opacity: 0; transition: opacity 0.15s; z-index: 100; box-shadow: 0 4px 12px rgba(0,0,0,0.5); line-height: 1.6; white-space: pre-line; }
+.trip-row { cursor: pointer; transition: background 0.15s; }
+.trip-row:hover, .trip-row.highlight { background: #2a2a40; }
+.gap-row { opacity: 0.45; cursor: default; }
+.gap-row:hover { opacity: 0.7; }
+.gap-label { color: #9ca3af; font-size: 0.8em; }
+.transit-row { opacity: 0.5; cursor: default; }
+.transit-row:hover { opacity: 0.7; }
+.transit-badge { color: #9ca3af; font-size: 0.8em; white-space: nowrap; }
+.flight-row { opacity: 0.35; cursor: default; }
+.flight-row:hover { opacity: 0.55; }
+.flight-label { color: #6b7280; font-size: 0.8em; font-style: italic; }
+.arc-segment { transition: opacity 0.15s, filter 0.15s; }
+path.arc-segment.highlight { filter: brightness(1.5); opacity: 1 !important; }
+.year-circle.has-hover path.arc-segment:not(.highlight) { opacity: 0.5; }
+@media (max-width: 900px) { .year-row { flex-direction: column; } .year-circle { flex: none; min-width: unset; max-width: 400px; margin: 0 auto; } }
+</style>
+</head>
+<body>
+<h1>Travel History</h1>
+<p class="subtitle">GPS location data: 2024-01-10 to 2025-01-02 · 6 trips · 4 countries</p>
+<div id="years"></div>
+<h2>Total time per country</h2>
+<table class="summary-table"><thead><tr><th>Country</th><th class="num">Total</th></tr></thead><tbody><tr><td><span class="badge" style="background:#d64141">Germany</span></td><td class="num">330 days (10.8 months)</td></tr>
+<tr><td><span class="badge" style="background:#416dd6">France</span></td><td class="num">7 days</td></tr>
+<tr><td><span class="badge" style="background:#98d641">Austria</span></td><td class="num">5 days</td></tr>
+<tr><td><span class="badge" style="background:#d641c4">Spain</span></td><td class="num">3 days</td></tr>
+</tbody></table>
+<p class="note">Generated from Google Location History. Dates are approximate (based on GPS activity, not passport stamps).</p>
+<div class="tooltip" id="tooltip"></div>
+<script>
+const yearData = {"2024": [{"cc": "DE", "name": "Germany", "start": 9.3, "end": 11.5, "from": "2024-01-10", "to": "2024-01-12", "days": 3}, {"cc": "FR", "name": "France", "start": 11.6, "end": 18.4, "from": "2024-01-12", "to": "2024-01-19", "days": 8}, {"cc": "ES", "name": "Spain", "start": 18.5, "end": 21.9, "from": "2024-01-19", "to": "2024-01-22", "days": 4}, {"cc": "--", "name": "NO DATA", "start": 21.9, "end": 35.3, "from": "2024-01-22", "to": "2024-02-05", "days": 15}, {"cc": "DE", "name": "Germany", "start": 35.3, "end": 359.0, "from": "2024-02-05", "to": "2024-12-24", "days": 324}, {"cc": "AT", "name": "Austria", "start": 359.0, "end": 364.0, "from": "2024-12-25", "to": "2024-12-29", "days": 5}, {"cc": "DE", "name": "Germany", "start": 364.0, "end": 366.0, "from": "2024-12-29", "to": "2024-12-31", "days": 3}], "2025": [{"cc": "DE", "name": "Germany", "start": 0.0, "end": 1.8, "from": "2025-01-01", "to": "2025-01-02", "days": 2}]};
+const countryColors = {"--": "#374151", "DE": "#d64141", "FR": "#416dd6", "AT": "#98d641", "ES": "#d641c4"};
+const tripsByYear = {"2024": [{"cc": "DE", "country": "Germany", "entry": "2024-01-10", "exit": "2024-01-12", "dur": "3d"}, {"cc": "FR", "country": "France", "entry": "2024-01-12", "exit": "2024-01-19", "dur": "8d"}, {"cc": "ES", "country": "Spain", "entry": "2024-01-19", "exit": "2024-01-22", "dur": "4d"}, {"cc": "--", "country": "In flight", "entry": "2024-01-22", "exit": "2024-01-23", "dur": "2d", "flight": true}, {"cc": "--", "country": "⚠️ NO DATA", "entry": "2024-01-23", "exit": "2024-02-05", "dur": "14d", "gap": true}, {"cc": "DE", "country": "Germany", "entry": "2024-02-05", "exit": "2024-12-25", "dur": "325d"}, {"cc": "AT", "country": "Austria", "entry": "2024-12-25", "exit": "2024-12-29", "dur": "5d"}, {"cc": "DE", "country": "Germany", "entry": "2024-12-29", "exit": "2025-01-02", "dur": "5d"}], "2025": [{"cc": "DE", "country": "Germany", "entry": "2024-12-29", "exit": "2025-01-02", "dur": "5d"}]};
+
+const tooltip = document.getElementById('tooltip');
+document.addEventListener('mousemove', e => { tooltip.style.left = (e.clientX + 12) + 'px'; tooltip.style.top = (e.clientY - 30) + 'px'; });
+
+function dayToAngle(day, year) { const diy = (year % 4 === 0 && (year % 100 !== 0 || year % 400 === 0)) ? 366 : 365; return -90 - (day / diy) * 360; }
+function polarToXY(cx, cy, r, a) { const rad = a * Math.PI / 180; return { x: cx + r * Math.cos(rad), y: cy + r * Math.sin(rad) }; }
+function createArcPath(cx, cy, oR, iR, sD, eD, yr) { const sA = dayToAngle(sD, yr), eA = dayToAngle(eD, yr); const la = Math.abs(sA - eA) > 180 ? 1 : 0; const p1 = polarToXY(cx, cy, oR, sA), p2 = polarToXY(cx, cy, oR, eA), p3 = polarToXY(cx, cy, iR, eA), p4 = polarToXY(cx, cy, iR, sA); return `M ${p1.x} ${p1.y} A ${oR} ${oR} 0 ${la} 0 ${p2.x} ${p2.y} L ${p3.x} ${p3.y} A ${iR} ${iR} 0 ${la} 1 ${p4.x} ${p4.y} Z`; }
+
+function arcMatchesRow(arc, tr) {
+    if (arc.dataset.cc !== tr.dataset.cc) return false;
+    const af = arc.dataset.from, at = arc.dataset.to, re = tr.dataset.entry, rx = tr.dataset.exit;
+    if (af > rx || at < re) return false;
+    if (af === rx && af !== at && re !== rx) return false;
+    if (at === re && af !== at && re !== rx) return false;
+    return true;
+}
+
+const container = document.getElementById('years');
+Object.keys(yearData).sort().forEach(year => {
+    const spans = yearData[year], yearNum = parseInt(year);
+    const size = 580, cx = size/2, cy = size/2, outerR = 160, innerR = 110;
+    let svg = '';
+    svg += `<circle cx="${cx}" cy="${cy}" r="${(outerR+innerR)/2}" fill="none" stroke="#2a2a40" stroke-width="${outerR-innerR}"/>`;
+
+    spans.forEach(span => {
+        if (span.cc === '--') return;
+        const dur = span.end - span.start;
+        if (dur < 0.05) return;
+        let drawEnd = dur < 1.2 ? span.start + 1.2 : span.end;
+        const color = countryColors[span.cc] || '#555';
+        const path = createArcPath(cx, cy, outerR, innerR, span.start, drawEnd, yearNum);
+        const tip = `${span.name}\n${span.from} — ${span.to}\n${span.days} ${span.days===1?'day':'days'}`;
+        svg += `<path d="${path}" fill="${color}" stroke="#1a1a2e" stroke-width="0.8" class="arc-segment" data-cc="${span.cc}" data-from="${span.from}" data-to="${span.to}" data-tooltip="${tip}" style="cursor:pointer"/>`;
+    });
+
+    const monthNames = ['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+    [0,31,59,90,120,151,181,212,243,273,304,334].forEach((day, i) => {
+        const a = dayToAngle(day, yearNum), p1 = polarToXY(cx, cy, outerR+2, a), p2 = polarToXY(cx, cy, outerR+6, a);
+        svg += `<line x1="${p1.x}" y1="${p1.y}" x2="${p2.x}" y2="${p2.y}" stroke="#555" stroke-width="1"/>`;
+        const ma = dayToAngle(day+15, yearNum), pl = polarToXY(cx, cy, innerR-16, ma);
+        svg += `<text x="${pl.x}" y="${pl.y}" font-size="10" fill="#555" text-anchor="middle" dominant-baseline="middle">${monthNames[i]}</text>`;
+    });
+
+    const labeled = spans.filter(s => s.cc !== '--');
+    const placedLabels = [];
+    labeled.forEach((span, idx) => {
+        const mid = (span.start+span.end)/2, ma = dayToAngle(mid, yearNum);
+        let r = outerR + 20;
+        const testW = span.name.length * 5.5, testH = 11;
+        for (let t = 0; t < 8; t++) {
+            const pe = polarToXY(cx, cy, r, ma);
+            const xOff = pe.x > cx ? 4 : -4;
+            const lx = pe.x > cx ? pe.x + xOff : pe.x + xOff - testW;
+            const ly = pe.y - testH/2;
+            if (!placedLabels.some(p => lx < p.x+p.w && lx+testW > p.x && ly < p.y+p.h && ly+testH > p.y)) {
+                placedLabels.push({x:lx, y:ly, w:testW, h:testH});
+                const ps = polarToXY(cx, cy, outerR+3, ma);
+                svg += `<line x1="${ps.x}" y1="${ps.y}" x2="${pe.x}" y2="${pe.y}" stroke="#444" stroke-width="0.5" stroke-dasharray="2,1"/>`;
+                svg += `<circle cx="${pe.x}" cy="${pe.y}" r="1.5" fill="#666"/>`;
+                const anchor = pe.x > cx ? 'start' : 'end';
+                const tip = `${span.name}\n${span.from} — ${span.to}\n${span.days} ${span.days===1?'day':'days'}`;
+                svg += `<text x="${pe.x+xOff}" y="${pe.y}" font-size="8" fill="#bbb" text-anchor="${anchor}" dominant-baseline="middle" class="arc-segment" data-cc="${span.cc}" data-from="${span.from}" data-to="${span.to}" data-tooltip="${tip}" style="cursor:pointer">${span.name}</text>`;
+                break;
+            }
+            r += 12;
+        }
+    });
+
+    const ja = dayToAngle(0, yearNum), jo = polarToXY(cx, cy, outerR+2, ja), ji = polarToXY(cx, cy, 40, ja);
+    svg += `<line x1="${jo.x}" y1="${jo.y}" x2="${ji.x}" y2="${ji.y}" stroke="#666" stroke-width="2" stroke-linecap="round"/>`;
+    svg += `<text x="${cx}" y="${cy+2}" font-size="32" font-weight="bold" fill="#fff" text-anchor="middle" dominant-baseline="middle">${year}</text>`;
+
+    const yearTrips = tripsByYear[year] || [];
+    let tbl = '<table><thead><tr><th>Country</th><th>Entry</th><th>Exit</th><th class="num">Duration</th></tr></thead><tbody>';
+    yearTrips.forEach((t, idx) => {
+        const color = countryColors[t.cc] || '#555';
+        if (t.gap) tbl += `<tr class="trip-row gap-row" data-year="${year}" data-idx="${idx}" data-cc="${t.cc}" data-entry="${t.entry}" data-exit="${t.exit}"><td class="gap-label">${t.country}</td><td>${t.entry}</td><td>${t.exit}</td><td class="num">${t.dur}</td></tr>`;
+        else if (t.flight) tbl += `<tr class="trip-row flight-row" data-year="${year}" data-idx="${idx}" data-cc="${t.cc}" data-entry="${t.entry}" data-exit="${t.exit}"><td class="flight-label">↗ ${t.country}</td><td>${t.entry}</td><td>${t.exit}</td><td class="num">${t.dur}</td></tr>`;
+        else if (t.transit) tbl += `<tr class="trip-row transit-row" data-year="${year}" data-idx="${idx}" data-cc="${t.cc}" data-entry="${t.entry}" data-exit="${t.exit}"><td><span class="transit-badge">✈️ ${t.country}</span></td><td>${t.entry}</td><td>${t.exit}</td><td class="num">${t.dur}</td></tr>`;
+        else tbl += `<tr class="trip-row" data-year="${year}" data-idx="${idx}" data-cc="${t.cc}" data-entry="${t.entry}" data-exit="${t.exit}"><td><span class="badge" style="background:${color}">${t.country}</span></td><td>${t.entry}</td><td>${t.exit}</td><td class="num">${t.dur}</td></tr>`;
+    });
+    tbl += '</tbody></table>';
+
+    const row = document.createElement('div');
+    row.className = 'year-row';
+    row.innerHTML = `<div class="year-circle"><svg viewBox="0 0 ${size} ${size}" xmlns="http://www.w3.org/2000/svg">${svg}</svg></div><div class="year-trips">${tbl}</div>`;
+    container.appendChild(row);
+
+    const arcs = row.querySelectorAll('.arc-segment[data-cc]');
+    const rows = row.querySelectorAll('.trip-row');
+    const circleEl = row.querySelector('.year-circle');
+
+    rows.forEach(tr => {
+        tr.addEventListener('mouseenter', () => {
+            circleEl.classList.add('has-hover');
+            arcs.forEach(a => { if (arcMatchesRow(a, tr)) a.classList.add('highlight'); });
+            tr.classList.add('highlight');
+        });
+        tr.addEventListener('mouseleave', () => {
+            circleEl.classList.remove('has-hover');
+            arcs.forEach(a => a.classList.remove('highlight'));
+            tr.classList.remove('highlight');
+        });
+    });
+
+    arcs.forEach(arc => {
+        arc.addEventListener('mouseenter', () => {
+            circleEl.classList.add('has-hover');
+            const f = arc.dataset.from, t = arc.dataset.to, cc = arc.dataset.cc;
+            arcs.forEach(a => { if (a.dataset.cc===cc && a.dataset.from===f && a.dataset.to===t) a.classList.add('highlight'); });
+            rows.forEach(tr => { if (arcMatchesRow(arc, tr)) tr.classList.add('highlight'); });
+            tooltip.textContent = arc.getAttribute('data-tooltip');
+            tooltip.style.opacity = '1';
+        });
+        arc.addEventListener('mouseleave', () => {
+            circleEl.classList.remove('has-hover');
+            arcs.forEach(a => a.classList.remove('highlight'));
+            rows.forEach(tr => tr.classList.remove('highlight'));
+            tooltip.style.opacity = '0';
+        });
+    });
+});
+
+document.querySelectorAll('.arc-segment:not([data-cc])').forEach(el => {
+    el.addEventListener('mouseenter', () => { tooltip.textContent = el.getAttribute('data-tooltip'); tooltip.style.opacity = '1'; });
+    el.addEventListener('mouseleave', () => { tooltip.style.opacity = '0'; });
+});
+</script>
+</body>
+</html>
